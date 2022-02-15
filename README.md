@@ -1,4 +1,5 @@
 ## Project: Reliable Communication
+Sidharth Chaudhary
 
 In this project, you will implement reliable communication over an unreliable
 link, just like TCP.
