@@ -11,6 +11,17 @@ import struct
 import util
 import util.logging
 
+class send_packet:
+    def __init__(pack, seq, data):
+        pack.seq = seq
+        pack.data = data
+
+class recv_packet:
+    def __init__(pack, ack):
+        pack.ack = ack
+
+
+
 
 def send(sock: socket.socket, data: bytes):
     """
