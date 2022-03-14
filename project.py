@@ -10,14 +10,23 @@ import typing
 import struct
 import util
 import util.logging
+import pickle
 
 class send_packet:
-    def __init__(pack, seq, data):
-        pack.seq = seq
-        pack.data = data
+    def __init__(self, seq, data):
+        self.seq = seq
+        self.data = data
+        #print(self.seq)
+        #print(self.data)
+    def encode(self):
+        send_data = bytearray(self.data)
+        list = [self.seq, send_data]
+        #print(list)
+        return list
+
 
 class recv_packet:
-    def __init__(pack, ack):
+    def __init__(self, ack):
         pack.ack = ack
 
 
@@ -39,11 +48,15 @@ def send(sock: socket.socket, data: bytes):
     # over the network, pausing half a second between sends to let the
     # network "rest" :)
     logger = util.logging.get_logger("project-sender")
-    chunk_size = util.MAX_PACKET
+    chunk_size = util.MAX_PACKET - 100
     pause = .1
-    offsets = range(0, len(data), util.MAX_PACKET)
+    offsets = range(0, len(data), util.MAX_PACKET - 100)
+    index = 0
     for chunk in [data[i:i + chunk_size] for i in offsets]:
-        sock.send(chunk)
+        send_pack = send_packet(index, chunk)
+        msg = pickle.dumps(send_pack)
+        sock.send(msg)#bytearray([index, chunk]))#msg)
+        index+=1
         logger.info("Pausing for %f seconds", round(pause, 2))
         time.sleep(pause)
 
@@ -68,8 +81,11 @@ def recv(sock: socket.socket, dest: io.BufferedIOBase) -> int:
         data = sock.recv(util.MAX_PACKET)
         if not data:
             break
+        received_pack = pickle.loads(data)
+        #decoded_data = data.decode()
+        #send_pack = send_packet(decoded_data[0],decoded_data[1])
         logger.info("Received %d bytes", len(data))
-        dest.write(data)
-        num_bytes += len(data)
+        dest.write(received_pack.data)#data)#send_pack.data)#received_pack.data)#
+        num_bytes += len(received_pack.data)#received_pack.data)#data)
         dest.flush()
     return num_bytes
